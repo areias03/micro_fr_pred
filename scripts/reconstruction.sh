@@ -13,11 +13,12 @@ for assembly in $assembly_path/*.fa.gz; do
   IFS='-' read -ra split <<< "$filename"
   sample=$(echo "${split[0]}")
   # Download EggNOG-mapper data from SPIRE and move to sub-folder
-  eggnog_data=$(wget "https://spire.embl.de/download_eggnog/${sample}" -O "${assembly_path}/eggnog_mapper/") &
-  tar -xzf $eggnog_data &
+  eggnog_data=$(wget "https://spire.embl.de/download_eggnog/${sample}" -O "${assembly_path}/eggnog_mapper/${sample}.spire.emapper_annotations") &
+  echo "${eggnog_data}"
+  # tar -xzf $eggnog_data &
   # Reconstruction process
   conda activate carveme
   module load cplex
-  parallel --dry-run -j 0 carveme $assembly --output "${assembly_path}/reconstructions/${sample}.xml" --egg "${assembly_path}/eggnog_mapper/${sample}.spire.emapper_annotations" 
+  # parallel --dry-run -j 0 carveme $assembly --output "${assembly_path}/reconstructions/${sample}.xml" --egg "${assembly_path}/eggnog_mapper/${sample}.spire.emapper_annotations" 
 done
 
