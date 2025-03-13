@@ -42,7 +42,7 @@ def process_sample(samp, stu_fol):
         # Print reconstruction command
         command = f"carve --dna {sample_folder}mags/{mag}.fa.gz --egg {sample_folder}emapper_annotations.tsv -o {sample_folder}reconstructions/{mag}.xml"
         print(command)
-        subprocess.call(command)
+        subprocess.check_call(command)
 
 
 def main():
