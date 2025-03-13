@@ -3,7 +3,7 @@ import os
 import requests
 
 
-class Sample(object):
+class Sample:
     """
     A sample from SPIRE.
 
@@ -34,10 +34,7 @@ class Sample(object):
         self.study: Study = None
 
         if out_folder:
-            if os.path.exists(out_folder):
-                pass
-            else:
-                os.makedirs(out_folder)
+            os.makedirs(out_folder, exist_ok=True)
         else:
             out_folder = f"./{id}"
             os.makedirs(out_folder)

@@ -2,7 +2,7 @@ import os
 from .sample import Sample
 
 
-class Study(object):
+class Study:
     """
     A study from SPIRE.
 

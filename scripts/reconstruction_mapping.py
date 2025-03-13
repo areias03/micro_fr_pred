@@ -7,6 +7,7 @@ import io
 import pandas as pd
 import argparse
 from micro_fr_pred.util import clean_emapper_data
+from micro_fr_pred.ncpus import get_ncpus
 import requests
 
 data_folder = "./data/"
@@ -42,7 +43,7 @@ def process_sample(samp, stu_fol):
         # Print reconstruction command
         command = f"carve --dna {sample_folder}mags/{mag}.fa.gz --egg {sample_folder}emapper_annotations.tsv -o {sample_folder}reconstructions/{mag}.xml"
         print(command)
-        subprocess.call(command)
+        subprocess.check_call(command)
 
 
 def main():
@@ -60,9 +61,12 @@ def main():
     os.makedirs(study_folder, exist_ok=True)
     stm = requests.get(f"https://spire.embl.de/api/study/{study}?format=tsv").text
     study_meta = pd.read_csv(io.StringIO(stm), sep="\t")
-    list_of_samples = study_meta.sample_id.tolist()
-    with ProcessPoolExecutor as executor:
-        executor.map(process_sample, list_of_samples)
+    with ProcessPoolExecutor(max_workers=get_ncpus()) as executor:
+        tasks = executor.map(process_sample, study_meta.sample_id.tolist())
+        # Iterating over the outputs will trigger error propagation
+        # (If any of the tasks raised an exception, it will be re-raised here)
+        for t in tasks:
+            pass
 
 
 if __name__ == "__main__":
