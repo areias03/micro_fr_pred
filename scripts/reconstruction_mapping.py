@@ -60,9 +60,12 @@ def main():
     os.makedirs(study_folder, exist_ok=True)
     stm = requests.get(f"https://spire.embl.de/api/study/{study}?format=tsv").text
     study_meta = pd.read_csv(io.StringIO(stm), sep="\t")
-    list_of_samples = study_meta.sample_id.tolist()
-    with ProcessPoolExecutor as executor:
-        executor.map(process_sample, list_of_samples)
+    with ProcessPoolExecutor() as executor:
+        tasks = executor.map(process_sample, study_meta.sample_id.tolist())
+        # Iterating over the outputs will trigger error propagation
+        # (If any of the tasks raised an exception, it will be re-raised here)
+        for t in tasks:
+            pass
 
 
 if __name__ == "__main__":
