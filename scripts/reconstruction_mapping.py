@@ -7,6 +7,7 @@ import io
 import pandas as pd
 import argparse
 from micro_fr_pred.util import clean_emapper_data
+from micro_fr_pred.ncpus import get_ncpus
 import requests
 
 data_folder = "./data/"
@@ -60,7 +61,7 @@ def main():
     os.makedirs(study_folder, exist_ok=True)
     stm = requests.get(f"https://spire.embl.de/api/study/{study}?format=tsv").text
     study_meta = pd.read_csv(io.StringIO(stm), sep="\t")
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=get_ncpus()) as executor:
         tasks = executor.map(process_sample, study_meta.sample_id.tolist())
         # Iterating over the outputs will trigger error propagation
         # (If any of the tasks raised an exception, it will be re-raised here)
