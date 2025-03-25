@@ -1,4 +1,5 @@
 import micom
+
 # import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -42,6 +43,7 @@ def main():
         manif, columns=["id", "genus", "species", "file", "sample_id", "abundance"]
     )
     manifest.groupby("sample_id")
+    print(manifest)
     print(
         f"\nUnmapped: {unmapped}\{unmapped + mapped}\tPercentage: {round(((unmapped / mapped) * 100), 2)}%"
     )

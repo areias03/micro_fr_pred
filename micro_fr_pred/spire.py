@@ -19,7 +19,7 @@ class Study:
     Attributes:
 
     name: str
-        And description.
+        Internal ID for the study.
     """
 
     def __init__(self, name: str, out_folder: str):
@@ -45,7 +45,11 @@ class Study:
     @property
     def samples(self):
         if self._samples is None:
-            self._samples = self.metadata.sample_id.tolist()
+            sample_list = []
+            for s in self.metadata.sample_id.tolist():
+                sample = Sample(s, self)
+                sample_list.append(sample)
+            self._samples = sample_list
         return self._samples
 
 
@@ -60,7 +64,7 @@ class Sample:
     Attributes:
 
     id: str
-        Internal ID for each study.
+        Internal ID for the sample.
     study: Study
         Study ID to which the sample belongs to.
     """
@@ -78,6 +82,14 @@ class Sample:
         self._metadata = None
 
         os.makedirs(self.out_folder, exist_ok=True)
+
+    def __str__(self):
+        return (
+            f"This sample's id is {self.id} and belongs to the {self.study.name} study."
+        )
+
+    def __repr__(self):
+        return f"Sample id: {self.id}\tStudy: {self.study.name}"
 
     @property
     def eggnog_data(self):

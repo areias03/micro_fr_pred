@@ -1,1 +1,1 @@
-from micro_fr_pred.spire_items import Study, Sample
+from micro_fr_pred.spire import Study, Sample

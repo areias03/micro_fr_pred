@@ -7,4 +7,8 @@ study_name = "Lloyd-Price_2019_HMP2IBD"
 
 study = Study(study_name, os.path.join(data_folder, study_name))
 
-print(study.metadata)
+# for sam in study.samples:
+#     print(str(sam))
+
+
+print(str(study.samples[-1]))
