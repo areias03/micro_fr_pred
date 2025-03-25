@@ -11,4 +11,4 @@ study = Study(study_name, os.path.join(data_folder, study_name))
 #     print(str(sam))
 
 
-print(str(study.samples[-1]))
+print(repr(study.samples[-1].metadata))

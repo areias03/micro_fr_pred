@@ -1,11 +1,15 @@
-import subprocess
-from micro_fr_pred.logger import logger
 import io
-import pandas as pd
-from micro_fr_pred.util import clean_emapper_data
-import urllib.request
 import os
+import subprocess
+import urllib.request
+
+import pandas as pd
 import requests
+
+from micro_fr_pred.logger import logger
+from micro_fr_pred.util import clean_emapper_data
+
+# TODO: Add higher level class for overall SPIRE to help deal with queries and dealing with metadata.
 
 
 class Study:
@@ -89,7 +93,7 @@ class Sample:
         )
 
     def __repr__(self):
-        return f"Sample id: {self.id}\tStudy: {self.study.name}"
+        return f"Sample id: {self.id} \tStudy: {self.study.name}"
 
     @property
     def eggnog_data(self):
@@ -118,6 +122,7 @@ class Sample:
     @property
     def metadata(self):
         if self._metadata is None:
+            logger.warning("No sample metadata, downloading from SPIRE...\n")
             url = requests.get(
                 f"https://spire.embl.de/api/sample/{self.id}?format=tsv"
             ).text
