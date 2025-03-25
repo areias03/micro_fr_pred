@@ -1,6 +1,10 @@
-from micro_fr_pred import Study, Sample
+from micro_fr_pred import Study
+import os
 
 
-data_folder = "/work/microbiome/users/areiasca/micro_fr_pred/data/"
+data_folder = "/home/alexandre/Documents/projects/micro_fr_pred/data"
+study_name = "Lloyd-Price_2019_HMP2IBD"
 
-study = Study("Lloyd-Price_2019_HMP2IBD", f"{data_folder}Lloyd-Price_2019_HMP2IBD")
+study = Study(study_name, os.path.join(data_folder, study_name))
+
+print(study.metadata)
