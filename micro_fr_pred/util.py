@@ -1,5 +1,6 @@
-import pandas as pd
 from os import environ
+
+import pandas as pd
 
 
 def get_ncpus():

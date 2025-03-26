@@ -11,4 +11,6 @@ study = Study(study_name, os.path.join(data_folder, study_name))
 #     print(str(sam))
 
 
-print(repr(study.samples[-1].metadata))
+print(study.samples[-1].id)
+print(study.samples[-1].mags)
+study.samples[-1].download_mags()

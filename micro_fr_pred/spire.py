@@ -8,8 +8,14 @@ import requests
 
 from micro_fr_pred.logger import logger
 from micro_fr_pred.util import clean_emapper_data
+import gzinfo
 
 # TODO: Add higher level class for overall SPIRE to help deal with queries and dealing with metadata.
+
+
+def genome_metadata():
+    data = pd.read_csv("data/spire_v1_genome_metadata.tsv.gz", sep="\t")
+    return data
 
 
 class Study:
@@ -79,7 +85,7 @@ class Sample:
         """
         self.id = id
         self.study = study
-        self.out_folder = f"{study.folder}{self.id}/"
+        self.out_folder = f"{study.folder}/{self.id}/"
         self._eggnog_data = None
         self._mags = None
         self._protein_bins = None
@@ -112,7 +118,9 @@ class Sample:
     @property
     def mags(self):
         if self._mags is None:
-            self._mags = self.metadata.spire_id.tolist()
+            spire_meta = genome_metadata()
+            masked = spire_meta.loc[spire_meta["derived_from_sample"] == self.id]
+            self._mags = masked["genome_id"].tolist()
         return self._mags
 
     @property
@@ -139,10 +147,17 @@ class Sample:
                 f"{mag_folder}{mag}.fa.gz",
             )
 
+        for f in os.listdir(mag_folder):
+            filename = gzinfo.read_gz_info(os.path.join(mag_folder, f))
+            print(filename.fname)
+
     def reconstruct(self):
         reconstruction_folder = f"{self.out_folder}reconstructions/"
         os.makedirs(reconstruction_folder, exist_ok=True)
-        if len(os.listdir(f"{self.out_folder}mags/")) == 0:
+        if (
+            not os.path.exists(f"{self.out_folder}mags/")
+            or len(os.listdir(f"{self.out_folder}mags/")) == 0
+        ):
             self.download_mags()
         command = f"carve -r {self.out_folder}mags/*.fa.gz --output {self.out_folder}reconstructions/"
         subprocess.check_call(command, shell=True)
