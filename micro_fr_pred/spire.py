@@ -88,8 +88,8 @@ class Sample:
         self.out_folder = f"{study.folder}/{self.id}/"
         self._eggnog_data = None
         self._mags = None
-        self._protein_bins = None
         self._metadata = None
+        self._manifest = None
 
         os.makedirs(self.out_folder, exist_ok=True)
 
@@ -116,16 +116,14 @@ class Sample:
         return self._eggnog_data
 
     @property
-    def mags(self):
+    def mags(self, download: bool = False):
         if self._mags is None:
             spire_meta = genome_metadata()
             masked = spire_meta.loc[spire_meta["derived_from_sample"] == self.id]
-            self._mags = masked["genome_id"].tolist()
+            self._mags = masked
+        if download:
+            self.download_mags()
         return self._mags
-
-    @property
-    def protein_bins(self):
-        return self._protein_bins
 
     @property
     def metadata(self):
@@ -137,6 +135,12 @@ class Sample:
             sample_meta = pd.read_csv(io.StringIO(url), sep="\t")
             self._metadata = sample_meta
         return self._metadata
+
+    @property
+    def manifest(self):
+        if self._manifest is None:
+            self._manifest = self.generate_manifest()
+        return self._manifest
 
     def download_mags(self):
         mag_folder = f"{self.out_folder}mags/"
@@ -150,6 +154,27 @@ class Sample:
         for f in os.listdir(mag_folder):
             filename = gzinfo.read_gz_info(os.path.join(mag_folder, f))
             print(filename.fname)
+
+    def generate_manifest(self):
+        manif = []
+        reconstruction_folder = f"{self.out_folder}reconstructions/"
+        for _, genome in self.mags.iterrows():
+            manif.append(
+                [
+                    genome.genome_id,
+                    genome.genus,
+                    genome.species,
+                    f"{reconstruction_folder}{genome.genome_id}.xml",
+                    genome.derived_from_sample,
+                    0,
+                ]
+            )
+
+        manifest = pd.DataFrame(
+            manif, columns=["id", "genus", "species", "file", "sample_id", "abundance"]
+        )
+        manifest.groupby("sample_id")
+        return manifest
 
     def reconstruct(self):
         reconstruction_folder = f"{self.out_folder}reconstructions/"
