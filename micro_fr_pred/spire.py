@@ -151,10 +151,6 @@ class Sample:
                 f"{mag_folder}{mag}.fa.gz",
             )
 
-        for f in os.listdir(mag_folder):
-            filename = gzinfo.read_gz_info(os.path.join(mag_folder, f))
-            print(filename.fname)
-
     def generate_manifest(self):
         manif = []
         reconstruction_folder = f"{self.out_folder}reconstructions/"
@@ -175,6 +171,17 @@ class Sample:
         )
         manifest.groupby("sample_id")
         return manifest
+
+    def get_abundances(self):
+        mag_folder = f"{self.out_folder}mags/"
+        for f in os.listdir(mag_folder):
+            filename = gzinfo.read_gz_info(os.path.join(mag_folder, f))
+            print(filename.fname)
+        depths = pd.read_csv(
+            f"{self.out_folder}bins/{self.id}_aligned_to_{self.id}.depths", sep="\t"
+        )
+        with gzip.open
+        return abundances
 
     def reconstruct(self):
         reconstruction_folder = f"{self.out_folder}reconstructions/"
