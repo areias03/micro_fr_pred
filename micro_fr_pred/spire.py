@@ -180,8 +180,8 @@ class Sample:
         depths = pd.read_csv(
             f"{self.out_folder}bins/{self.id}_aligned_to_{self.id}.depths", sep="\t"
         )
-        with gzip.open
-        return abundances
+        print(depths)
+        return None
 
     def reconstruct(self):
         reconstruction_folder = f"{self.out_folder}reconstructions/"
@@ -191,5 +191,5 @@ class Sample:
             or len(os.listdir(f"{self.out_folder}mags/")) == 0
         ):
             self.download_mags()
-        command = f"carve -r {self.out_folder}mags/*.fa.gz --output {self.out_folder}reconstructions/"
+        command = f"carve --dna -r {self.out_folder}mags/*.fa.gz --output {self.out_folder}reconstructions/"
         subprocess.check_call(command, shell=True)
