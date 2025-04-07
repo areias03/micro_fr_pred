@@ -184,6 +184,9 @@ class Sample:
             manif, columns=["id", "genus", "species", "file", "sample_id", "abundance"]
         )
         manifest.groupby("sample_id")
+        manifest["abundance"] = [
+            float(i) / sum(manifest["abundance"]) for i in manifest["abundance"]
+        ]
         return manifest
 
     def get_abundances(self):
