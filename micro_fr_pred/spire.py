@@ -8,7 +8,8 @@ import requests
 
 from micro_fr_pred.logger import logger
 from micro_fr_pred.util import clean_emapper_data
-import gzinfo
+import gzip
+from Bio import SeqIO
 
 # TODO: Add higher level class for overall SPIRE to help deal with queries and dealing with metadata.
 
@@ -34,7 +35,6 @@ class Study:
 
     def __init__(self, name: str, out_folder: str):
         self.name = name
-        # self.sample = list
         self.folder = out_folder
         self._metadata = None
         self._samples = None
@@ -88,6 +88,7 @@ class Sample:
         self.out_folder = f"{study.folder}/{self.id}/"
         self._eggnog_data = None
         self._mags = None
+        self._reconstructions = None
         self._metadata = None
         self._manifest = None
 
@@ -126,6 +127,18 @@ class Sample:
         return self._mags
 
     @property
+    def reconstructions(self):
+        if self._reconstructions is None:
+            list_reconstructions = []
+            logger.warning("Starting reconstruction process...")
+            for mag in self.mags.genome_id.tolist():
+                recon = self.reconstruct(mag)
+                list_reconstructions.append(recon)
+                print(f"Finished reconstruction for {mag}")
+        self._reconstructions = list_reconstructions
+        return self._reconstructions
+
+    @property
     def metadata(self):
         if self._metadata is None:
             logger.warning("No sample metadata, downloading from SPIRE...\n")
@@ -154,6 +167,7 @@ class Sample:
     def generate_manifest(self):
         manif = []
         reconstruction_folder = f"{self.out_folder}reconstructions/"
+        abun = self.get_abundances()
         for _, genome in self.mags.iterrows():
             manif.append(
                 [
@@ -162,7 +176,7 @@ class Sample:
                     genome.species,
                     f"{reconstruction_folder}{genome.genome_id}.xml",
                     genome.derived_from_sample,
-                    0,
+                    abun[f"{genome.genome_id}.fa.gz"],
                 ]
             )
 
@@ -173,23 +187,26 @@ class Sample:
         return manifest
 
     def get_abundances(self):
+        abundances = {}
         mag_folder = f"{self.out_folder}mags/"
-        for f in os.listdir(mag_folder):
-            filename = gzinfo.read_gz_info(os.path.join(mag_folder, f))
-            print(filename.fname)
         depths = pd.read_csv(
-            f"{self.out_folder}bins/{self.id}_aligned_to_{self.id}.depths", sep="\t"
+            f"~/microbiome/global_data_spire/SPIRE/studies/{self.study.name}/psa_megahit/psb_metabat2/{self.id}_aligned_to_{self.id}.depths",
+            sep="\t",
+            # f"{self.out_folder}bins/{self.id}_aligned_to_{self.id}.depths", sep="\t"
         )
-        with gzip.open
+        for f in os.listdir(mag_folder):
+            with gzip.open(f"{mag_folder}{f}", "rt") as handle:
+                list_headers = [rec.id for rec in SeqIO.parse(handle, "fasta")]
+            mask = depths["contigName"].isin(list_headers)
+            abundance = depths[mask]["totalAvgDepth"].sum()
+            abundances[f] = abundance
         return abundances
 
-    def reconstruct(self):
+    def reconstruct(self, mag):
         reconstruction_folder = f"{self.out_folder}reconstructions/"
         os.makedirs(reconstruction_folder, exist_ok=True)
-        if (
-            not os.path.exists(f"{self.out_folder}mags/")
-            or len(os.listdir(f"{self.out_folder}mags/")) == 0
-        ):
-            self.download_mags()
-        command = f"carve -r {self.out_folder}mags/*.fa.gz --output {self.out_folder}reconstructions/"
+        input = f"{self.out_folder}mags/{mag}.fa.gz"
+        output = f"{self.out_folder}reconstructions/{mag}.xml"
+        command = f"carve --dna {input} --output {output}"
         subprocess.check_call(command, shell=True)
+        return output
