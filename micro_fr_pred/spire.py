@@ -38,6 +38,7 @@ class Study:
         self.folder = out_folder
         self._metadata = None
         self._samples = None
+        self._manifest = None
 
         os.makedirs(self.folder, exist_ok=True)
 
@@ -61,6 +62,17 @@ class Study:
                 sample_list.append(sample)
             self._samples = sample_list
         return self._samples
+
+    @property
+    def manifest(self):
+        if self._manifest is None:
+            print("No manifest")
+
+        return self._manifest
+
+    def process_all_samples(self):
+        for sample in self.samples:
+            logger.info(f"Processing sample {sample.id}")
 
 
 class Sample:
@@ -172,6 +184,11 @@ class Sample:
             manif.append(
                 [
                     genome.genome_id,
+                    genome.domain,
+                    genome.phylum,
+                    genome["class"],
+                    genome.order,
+                    genome.family,
                     genome.genus,
                     genome.species,
                     f"{reconstruction_folder}{genome.genome_id}.xml",
@@ -181,12 +198,26 @@ class Sample:
             )
 
         manifest = pd.DataFrame(
-            manif, columns=["id", "genus", "species", "file", "sample_id", "abundance"]
+            manif,
+            columns=[
+                "id",
+                "kingdom",
+                "phylum",
+                "class",
+                "order",
+                "family",
+                "genus",
+                "species",
+                "file",
+                "sample_id",
+                "abundance",
+            ],
         )
         manifest.groupby("sample_id")
         manifest["abundance"] = [
             float(i) / sum(manifest["abundance"]) for i in manifest["abundance"]
         ]
+        manifest["abundance"] = manifest["abundance"] * 1000
         return manifest
 
     def get_abundances(self):
@@ -210,6 +241,6 @@ class Sample:
         os.makedirs(reconstruction_folder, exist_ok=True)
         input = f"{self.out_folder}mags/{mag}.fa.gz"
         output = f"{self.out_folder}reconstructions/{mag}.xml"
-        command = f"carve --dna {input} --output {output}"
+        command = f"carve --dna {input} --output {output} -i M9 -g M9 -v"
         subprocess.check_call(command, shell=True)
         return output
