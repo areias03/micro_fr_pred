@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Growth rates</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.27.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.17.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.24.0"></script>
+
+    <style>
+    #ints {
+        width: 100%;
+        margin: 1em;
+    }
+    #summ {
+        width: 100%;
+        margin: 1em;
+    }
+    </style>
+  </head>
+  <body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title">
+        Focal interactions for spire mag 00366781
+      </h1>
+      <h2 class="title">
+        Summarized interactions
+      </h2>
+
+      <p class="subtitle">
+        Each point denotes the total flux between the focal taxon and one interaction
+        partner in one sample. The interaction classes (provided, received, co-consumed) are always
+        in reference to the focal taxon.<br>
+        Click a point to select points from only that interaction partner. Click on an
+        empty region of the plot to reset the selection.<br>
+        Hover over each point to see its annotations. Use the "..." menu in the
+        upper right hand side to export the plot into various formats.
+      </p>
+    </div>
+    <!-- Container for the visualization -->
+    <div class="container">
+    <div id="summ"></div>
+    <a href="#" class="button is-primary" onclick="download_data('summary')">Download as CSV...</a>
+    </div><br><br>
+    <div class="container">
+      <h2 class="title">
+        Metabolic interactions
+      </h2>
+
+      <p class="subtitle">
+        Each point denotes the flux of a single metabolite between the reference (focal)
+        taxon and another interaction partner in one sample. The interaction classes
+        (provided, received, co-consumed) are always in reference to the focal taxon.<br>
+        Click a point to select points from only that interaction. Click on an
+        empty region of the plot to reset the selection.<br>
+        Hover over each point to see its annotations. Use the "..." menu in the
+        upper right hand side to export the plot into various formats.
+      </p>
+    </div>
+    <!-- Container for the visualization -->
+    <div class="container">
+    <div id="ints"></div>
+    <a href="#" class="button is-primary" onclick="download_data('interactions')">Download as CSV...</a>
+    </div>
+    <script>
+      var summSpec = {
+        $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+        width: 400,
+        height: 200,
+        data: {
+            values: [{"sample_id":"SAMN07510030","focal":"spire_mag_00366781","partner":"spire_mag_00366776","class":"provided","flux":2.6085062713,"mass_flux":2.6085062713,"C_flux":87.103659882,"N_flux":32.2606147711,"n_ints":1},{"sample_id":"SAMN07510030","focal":"spire_mag_00366781","partner":"spire_mag_00366776","class":"received","flux":2.6085062713,"mass_flux":2.6085062713,"C_flux":87.103659882,"N_flux":32.2606147711,"n_ints":2},{"sample_id":"SAMN07510030","focal":"spire_mag_00366781","partner":"spire_mag_00366783","class":"co-consumed","flux":2.6085062713,"mass_flux":2.6085062713,"C_flux":87.103659882,"N_flux":32.2606147711,"n_ints":2}]
+        },
+        selection: {
+          pts: {type: "single", fields: ["partner"]}
+        },
+        transform: [{
+          calculate: "random()-0.5",
+          as: "jitter"
+        }],
+        mark: {
+            type: "point",
+            filled: true,
+            size: 40,
+            tooltip: {content: "data"}
+        },
+        encoding: {
+          x: {
+            field: "flux",
+            type: "quantitative",
+            scale: {type: "log"},
+            axis: {title: "flux [g/[gDW·h]]", grid: false}
+          },
+          y: {
+            field: "class",
+            type: "nominal",
+            axis: {title: null, grid: true}
+          },
+          yOffset: {
+            field: "jitter",
+            type: "quantitative",
+            scale: {domain: [-1, 1]}
+          },
+          color: {
+            condition: {
+              selection: "pts",
+              field: "class",
+              type: "nominal",
+              legend: null
+            },
+            value: "lightgrey"
+          },
+          opacity: {
+            condition: {
+                selection: "pts",
+                value: 0.8
+            },
+            value: 0.2
+          }
+        }
+      };
+
+      var intSpec = {
+        $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+        width: 200,
+        height: 48,
+        data: {
+            values: [{"metabolite":"fe3_e","focal":"spire_mag_00366781","partner":"spire_mag_00366776","class":"received","flux":3.2260614771,"sample_id":"SAMN07510030","name":"Iron (Fe3+)","molecular_weight":55.845,"C_number":0,"N_number":0,"sbo":"SBO:0000247","kegg.compound":"C14819","chebi":"['CHEBI:13320', 'CHEBI:21130', 'CHEBI:24877', 'CHEBI:29034', 'CHEBI:34755', 'CHEBI:49595']","inchikey":"VTLYFUHAOXGGBS-UHFFFAOYSA-N","biocyc":"META:FE+3","metanetx.chemical":"MNXM196","seed.compound":"cpd10516","hmdb":"HMDB12943","kegg.drug":null,"reactome":"['R-ALL-111736', 'R-ALL-912516', 'R-ALL-912519', 'R-ALL-917943', 'R-ALL-917966']","lipidmaps":null,"kegg.glycan":null,"reaction":"EX_fe3_e"},{"metabolite":"fe3_e","focal":"spire_mag_00366781","partner":"spire_mag_00366783","class":"co-consumed","flux":3.2260614771,"sample_id":"SAMN07510030","name":"Iron (Fe3+)","molecular_weight":55.845,"C_number":0,"N_number":0,"sbo":"SBO:0000247","kegg.compound":"C14819","chebi":"['CHEBI:13320', 'CHEBI:21130', 'CHEBI:24877', 'CHEBI:29034', 'CHEBI:34755', 'CHEBI:49595']","inchikey":"VTLYFUHAOXGGBS-UHFFFAOYSA-N","biocyc":"META:FE+3","metanetx.chemical":"MNXM196","seed.compound":"cpd10516","hmdb":"HMDB12943","kegg.drug":null,"reactome":"['R-ALL-111736', 'R-ALL-912516', 'R-ALL-912519', 'R-ALL-917943', 'R-ALL-917966']","lipidmaps":null,"kegg.glycan":null,"reaction":"EX_fe3_e"},{"metabolite":"fe3pyovd_kt_e","focal":"spire_mag_00366781","partner":"spire_mag_00366776","class":"provided","flux":3.2260614771,"sample_id":"SAMN07510030","name":"Ferrypyoverdine  P putida KT2440 specific","molecular_weight":808.57302,"C_number":27,"N_number":10,"sbo":"SBO:0000247","kegg.compound":null,"chebi":null,"inchikey":null,"biocyc":null,"metanetx.chemical":null,"seed.compound":null,"hmdb":null,"kegg.drug":null,"reactome":null,"lipidmaps":null,"kegg.glycan":null,"reaction":"EX_fe3pyovd_kt_e"},{"metabolite":"pyovd_kt_e","focal":"spire_mag_00366781","partner":"spire_mag_00366776","class":"received","flux":3.2260614771,"sample_id":"SAMN07510030","name":"Pyoverdine  P putida specific","molecular_weight":752.72802,"C_number":27,"N_number":10,"sbo":"SBO:0000247","kegg.compound":null,"chebi":null,"inchikey":null,"biocyc":null,"metanetx.chemical":null,"seed.compound":null,"hmdb":null,"kegg.drug":null,"reactome":null,"lipidmaps":null,"kegg.glycan":null,"reaction":"EX_pyovd_kt_e"},{"metabolite":"pyovd_kt_e","focal":"spire_mag_00366781","partner":"spire_mag_00366783","class":"co-consumed","flux":3.2260614771,"sample_id":"SAMN07510030","name":"Pyoverdine  P putida specific","molecular_weight":752.72802,"C_number":27,"N_number":10,"sbo":"SBO:0000247","kegg.compound":null,"chebi":null,"inchikey":null,"biocyc":null,"metanetx.chemical":null,"seed.compound":null,"hmdb":null,"kegg.drug":null,"reactome":null,"lipidmaps":null,"kegg.glycan":null,"reaction":"EX_pyovd_kt_e"}]
+        },
+        selection: {
+          pts: {type: "single", fields: ["partner"]}
+        },
+        transform: [{
+          calculate: "random()-0.5",
+          as: "jitter"
+        }],
+        mark: {
+            type: "point",
+            filled: true,
+            size: 40,
+            tooltip: {content: "data"}
+        },
+        encoding: {
+          x: {
+            field: "flux",
+            type: "quantitative",
+            scale: {type: "log"},
+            axis: {title: "flux [g/[gDW·h]]", grid: false}
+          },
+          y: {
+            field: "name",
+            type: "nominal",
+            sort: {op: "mean", field: "flux"},
+            axis: {title: null, grid: true}
+          },
+          yOffset: {
+            field: "jitter",
+            type: "quantitative",
+            scale: {domain: [-0.9, 0.9]}
+          },
+          color: {
+            condition: {
+              selection: "pts",
+              field: "class",
+              type: "nominal",
+              legend: null
+            },
+            value: "lightgrey"
+          },
+          opacity: {
+            condition: {
+                selection: "pts",
+                value: 0.8
+            },
+            value: 0.2
+          },
+          column: {field: "class", title: null}
+        }
+      };
+
+      // Embed the visualization in the container with id `vis`
+      vegaEmbed("#ints", intSpec, {renderer: "svg"}).then(function(r) {
+        svg = document.querySelector("#ints svg");
+        svg.setAttribute("width", "100%")
+        svg.setAttribute("height", "auto")
+      });
+      vegaEmbed("#summ", summSpec, {renderer: "svg"}).then(function(r) {
+        svg = document.querySelector("#summ svg");
+        svg.setAttribute("width", "100%")
+        svg.setAttribute("height", "auto")
+      });
+
+      files = {'interactions': 'metabolite,focal,partner,class,flux,sample_id,name,molecular_weight,C_number,N_number,sbo,kegg.compound,chebi,inchikey,biocyc,metanetx.chemical,seed.compound,hmdb,kegg.drug,reactome,lipidmaps,kegg.glycan,reaction\nfe3_e,spire_mag_00366781,spire_mag_00366776,received,3.226061477111422,SAMN07510030,Iron (Fe3+),55.845,0,0,SBO:0000247,C14819,"[\'CHEBI:13320\', \'CHEBI:21130\', \'CHEBI:24877\', \'CHEBI:29034\', \'CHEBI:34755\', \'CHEBI:49595\']",VTLYFUHAOXGGBS-UHFFFAOYSA-N,META:FE+3,MNXM196,cpd10516,HMDB12943,,"[\'R-ALL-111736\', \'R-ALL-912516\', \'R-ALL-912519\', \'R-ALL-917943\', \'R-ALL-917966\']",,,EX_fe3_e\nfe3_e,spire_mag_00366781,spire_mag_00366783,co-consumed,3.226061477111422,SAMN07510030,Iron (Fe3+),55.845,0,0,SBO:0000247,C14819,"[\'CHEBI:13320\', \'CHEBI:21130\', \'CHEBI:24877\', \'CHEBI:29034\', \'CHEBI:34755\', \'CHEBI:49595\']",VTLYFUHAOXGGBS-UHFFFAOYSA-N,META:FE+3,MNXM196,cpd10516,HMDB12943,,"[\'R-ALL-111736\', \'R-ALL-912516\', \'R-ALL-912519\', \'R-ALL-917943\', \'R-ALL-917966\']",,,EX_fe3_e\nfe3pyovd_kt_e,spire_mag_00366781,spire_mag_00366776,provided,3.2260614771114358,SAMN07510030,Ferrypyoverdine  P putida KT2440 specific,808.57302,27,10,SBO:0000247,,,,,,,,,,,,EX_fe3pyovd_kt_e\npyovd_kt_e,spire_mag_00366781,spire_mag_00366776,received,3.2260614771114358,SAMN07510030,Pyoverdine  P putida specific,752.72802,27,10,SBO:0000247,,,,,,,,,,,,EX_pyovd_kt_e\npyovd_kt_e,spire_mag_00366781,spire_mag_00366783,co-consumed,3.2260614771114358,SAMN07510030,Pyoverdine  P putida specific,752.72802,27,10,SBO:0000247,,,,,,,,,,,,EX_pyovd_kt_e\n', 'summary': 'sample_id,focal,partner,class,flux,mass_flux,C_flux,N_flux,n_ints\nSAMN07510030,spire_mag_00366781,spire_mag_00366776,provided,2.608506271253655,2.608506271253655,87.10365988200877,32.260614771114355,1\nSAMN07510030,spire_mag_00366781,spire_mag_00366776,received,2.608506271253654,2.608506271253654,87.10365988200877,32.260614771114355,2\nSAMN07510030,spire_mag_00366781,spire_mag_00366783,co-consumed,2.608506271253654,2.608506271253654,87.10365988200877,32.260614771114355,2\n'};
+
+function download_data(key) {
+    var blob = new Blob([files[key]], {type: "text/csv;charset=utf-8;"}),
+        filename = key + ".csv",
+        url = window.URL.createObjectURL(blob);
+    if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, filename);
+    } else {
+        var link = document.createElement("a");
+        if (link.download !== undefined) { // feature detection
+            // Browsers that support HTML5 download attribute
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+}
+    </script>
+  </section>
+  </body>
+</html>

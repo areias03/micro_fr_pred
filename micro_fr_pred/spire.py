@@ -1,3 +1,5 @@
+import glob
+import gzip
 import io
 import os
 import subprocess
@@ -5,11 +7,10 @@ import urllib.request
 
 import pandas as pd
 import requests
+from Bio import SeqIO
 
 from micro_fr_pred.logger import logger
 from micro_fr_pred.util import clean_emapper_data
-import gzip
-from Bio import SeqIO
 
 # TODO: Add higher level class for overall SPIRE to help deal with queries and dealing with metadata.
 
@@ -228,7 +229,7 @@ class Sample:
             sep="\t",
             # f"{self.out_folder}bins/{self.id}_aligned_to_{self.id}.depths", sep="\t"
         )
-        for f in os.listdir(mag_folder):
+        for f in glob.glob(f"{mag_folder}*.fa.gz"):
             with gzip.open(f"{mag_folder}{f}", "rt") as handle:
                 list_headers = [rec.id for rec in SeqIO.parse(handle, "fasta")]
             mask = depths["contigName"].isin(list_headers)
