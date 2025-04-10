@@ -23,7 +23,6 @@ print(f"Metadata:\n {study.metadata}\n")
 print("###Sample ###")
 print(f"Name: {sample.id}\n")
 print(f"MAGs:\n {sample.mags}\n")
-print(f"GEMs:\n {sample.reconstructions}\n")
 print(f"Abundances:\n {sample.get_abundances()}\n")
 print(f"Manifest:\n {sample.manifest.file[0]}\n")
 
