@@ -194,7 +194,7 @@ class Sample:
                     genome.species,
                     f"{reconstruction_folder}{genome.genome_id}.xml",
                     genome.derived_from_sample,
-                    abun[f"{genome.genome_id}.fa.gz"],
+                    abun[f"{self.out_folder}mags/{genome.genome_id}.fa.gz"],
                 ]
             )
 
@@ -218,7 +218,7 @@ class Sample:
         manifest["abundance"] = [
             float(i) / sum(manifest["abundance"]) for i in manifest["abundance"]
         ]
-        manifest["abundance"] = manifest["abundance"] * 1000
+        # manifest["abundance"] = manifest["abundance"] * 1000
         return manifest
 
     def get_abundances(self):
@@ -230,7 +230,7 @@ class Sample:
             # f"{self.out_folder}bins/{self.id}_aligned_to_{self.id}.depths", sep="\t"
         )
         for f in glob.glob(f"{mag_folder}*.fa.gz"):
-            with gzip.open(f"{mag_folder}{f}", "rt") as handle:
+            with gzip.open(f, "rt") as handle:
                 list_headers = [rec.id for rec in SeqIO.parse(handle, "fasta")]
             mask = depths["contigName"].isin(list_headers)
             abundance = depths[mask]["totalAvgDepth"].sum()

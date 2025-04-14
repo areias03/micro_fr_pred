@@ -24,6 +24,6 @@ print("###Sample ###")
 print(f"Name: {sample.id}\n")
 print(f"MAGs:\n {sample.mags}\n")
 print(f"Abundances:\n {sample.get_abundances()}\n")
-print(f"Manifest:\n {sample.manifest.file[0]}\n")
+print(f"Manifest:\n {sample.manifest}\n")
 
 sample.manifest.to_csv(f"{sample.out_folder}sample_manifest.csv")
