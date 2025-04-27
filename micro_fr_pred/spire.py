@@ -42,6 +42,7 @@ class Study:
         self._manifest = None
 
         os.makedirs(self.folder, exist_ok=True)
+        self.samples
 
     @property
     def metadata(self):
