@@ -218,16 +218,15 @@ class Sample:
         manifest["abundance"] = [
             float(i) / sum(manifest["abundance"]) for i in manifest["abundance"]
         ]
-        # manifest["abundance"] = manifest["abundance"] * 1000
+        manifest["abundance"] = manifest["abundance"] * 1000
         return manifest
 
     def get_abundances(self):
         abundances = {}
         mag_folder = f"{self.out_folder}mags/"
         depths = pd.read_csv(
-            f"~/microbiome/global_data_spire/SPIRE/studies/{self.study.name}/psa_megahit/psb_metabat2/{self.id}_aligned_to_{self.id}.depths",
+            f"/work/microbiome/global_data_spire/SPIRE/studies/{self.study.name}/psa_megahit/psb_metabat2/{self.id}_aligned_to_{self.id}.depths",
             sep="\t",
-            # f"{self.out_folder}bins/{self.id}_aligned_to_{self.id}.depths", sep="\t"
         )
         for f in glob.glob(f"{mag_folder}*.fa.gz"):
             with gzip.open(f, "rt") as handle:
