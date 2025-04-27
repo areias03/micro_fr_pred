@@ -1,6 +1,7 @@
 import os.path as path
 import pandas as pd
 from jug import TaskGenerator
+from jug import bvalue
 from micro_fr_pred import Study, Sample
 
 study_name = "Lloyd-Price_2019_HMP2IBD"
@@ -13,6 +14,7 @@ def process_sample(sample: Sample):
     sample.download_mags()
     sample.reconstructions
     manifest = sample.manifest
+    manifest.to_csv(path.join(s.out_folder, "sample_manifest.csv"))
     return manifest
 
 
@@ -22,18 +24,19 @@ def generate_study_manifest(study: Study):
     for s in study.samples:
         list_manifests.append(s)
     manifest = pd.concat(list_manifests)
+    manifest.to_csv(path.join(study.folder, "study_manifest.csv"))
     return manifest
 
 
 @TaskGenerator
-def main():
+def load_study(study_name: str):
     study = Study(study_name, path.join(data_folder, study_name))
-    for s in study.samples:
-        sample_manifest = process_sample(s)
-        sample_manifest.to_csv(path.join(s.out_folder, "sample_manifest.csv"))
-    study_manifest = generate_study_manifest(study)
-    study_manifest.to_csv(path.join(study.folder, "study_manifest.csv"))
+    return study
 
 
-if __name__ == "__main__":
-    main()
+study = load_study(study_name)
+
+for s in bvalue(study).samples:
+    sample_manifest = process_sample(s)
+study_manifest = generate_study_manifest(study)
+
