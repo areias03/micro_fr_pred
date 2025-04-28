@@ -226,8 +226,8 @@ class Sample:
         abundances = {}
         mag_folder = f"{self.out_folder}mags/"
         depths = pd.read_csv(
-            # f"/work/microbiome/global_data_spire/SPIRE/studies/{self.study.name}/psa_megahit/psb_metabat2/{self.id}_aligned_to_{self.id}.depths",
-            f"~/microbiome/global_data_spire/SPIRE/studies/{self.study.name}/psa_megahit/psb_metabat2/{self.id}_aligned_to_{self.id}.depths",
+            f"/work/microbiome/global_data_spire/SPIRE/studies/{self.study.name}/psa_megahit/psb_metabat2/{self.id}_aligned_to_{self.id}.depths",
+            # f"/home/alexandre/microbiome/global_data_spire/SPIRE/studies/{self.study.name}/psa_megahit/psb_metabat2/{self.id}_aligned_to_{self.id}.depths",
             sep="\t",
         )
         for f in glob.glob(f"{mag_folder}*.fa.gz"):

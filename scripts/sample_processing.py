@@ -5,8 +5,8 @@ from jug import bvalue
 from micro_fr_pred import Study, Sample
 
 study_name = "Lloyd-Price_2019_HMP2IBD"
-# data_folder = "/work/microbiome/users/areiasca/micro_fr_pred/data/"
-data_folder = "/home/alexandre/Documents/projects/micro_fr_pred/data/"
+data_folder = "/work/microbiome/users/areiasca/micro_fr_pred/data/"
+# data_folder = "/home/alexandre/Documents/projects/micro_fr_pred/data/"
 
 
 @TaskGenerator
