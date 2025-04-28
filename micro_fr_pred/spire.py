@@ -172,7 +172,7 @@ class Sample:
     def download_mags(self):
         mag_folder = f"{self.out_folder}mags/"
         os.makedirs(mag_folder, exist_ok=True)
-        for mag in self.mags:
+        for mag in self.mags["genome_id"].tolist():
             urllib.request.urlretrieve(
                 f"https://spire.embl.de/download_file/{mag}",
                 f"{mag_folder}{mag}.fa.gz",
