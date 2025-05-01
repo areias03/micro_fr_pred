@@ -101,7 +101,7 @@ class Sample:
         self.study = study
         self.out_folder = f"{study.folder}/{self.id}/"
         self._eggnog_data = None
-        self._mags = None
+        self._mags = self.mags
         self._reconstructions = None
         self._metadata = None
         self._manifest = None
