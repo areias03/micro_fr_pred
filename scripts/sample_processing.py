@@ -22,13 +22,20 @@ def process_sample(sample: Sample):
 
 
 @TaskGenerator
-def process_mag(mag, mag_folder, reconstruction_folder):
+def download_mag(mag, mag_folder):
+    os.makedirs(mag_folder, exist_ok=True)
     print("Started MAG:\t", mag)
+    mag_out = path.join(mag_folder, f"{mag}.fa.gz")
     urllib.request.urlretrieve(
         f"https://spire.embl.de/download_file/{mag}",
-        path.join(mag_folder, f"{mag}.fa.gz"),
+        mag_out,
     )
-    input = path.join(mag_folder, f"{mag}.fa.gz")
+    return mag_out
+
+
+@TaskGenerator
+def run_carveme(mag, input, reconstruction_folder):
+    os.makedirs(reconstruction_folder, exist_ok=True)
     output = path.join(reconstruction_folder, f"{mag}.xml")
     command = f"carve --dna {input} --output {output} -i M9 -g M9 -v"
     subprocess.check_call(command, shell=True)
@@ -57,10 +64,9 @@ for s in bvalue(study).samples:
     manifest = process_sample(s)
     mag_folder = path.join(s.out_folder, "mags")
     reconstruction_folder = path.join(s.out_folder, "reconstructions")
-    os.makedirs(reconstruction_folder, exist_ok=True)
-    os.makedirs(mag_folder, exist_ok=True)
     for mag in bvalue(s.mags["genome_id"].tolist()):
-        process_mag(mag, mag_folder, reconstruction_folder)
+        magf = download_mag(mag, mag_folder)
+        run_carveme(mag, magf, reconstruction_folder)
     print(manifest)
 
 study_manifest = generate_study_manifest(study)
