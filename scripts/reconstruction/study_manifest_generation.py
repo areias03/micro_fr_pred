@@ -82,13 +82,21 @@ def load_study(study: str):
     return Study(study)
 
 
+@TaskGenerator
+def merge_partials(partials):
+    study_manifest = pl.concat(partials, how="vertical")
+    study_manifest = study_manifest.group_by("sample_id")
+    oname = path.join(data_folder, study_name, "study_manifest.csv")
+    study_manifest.write_csv(oname)
+    return oname
+
+
 study = load_study(study_name)
 
 manifest_list = []
 for s in bvalue(study).samples:
     manifest = generate_manifest(s)
-    manifest_list.append(manifest.value())
-study_manifest = pl.concat(manifest_list, how="vertical")
-study_manifest = study_manifest.group_by("sample_id")
-study_manifest.write_csv(path.join(data_folder, study_name, "study_manifest.csv"))
-print(study_manifest)
+    manifest_list.append(manifest)
+
+merge_partials(manifest_list)
+
