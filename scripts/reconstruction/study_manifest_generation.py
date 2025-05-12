@@ -2,10 +2,10 @@ import polars as pl
 from Bio import SeqIO
 import gzip
 import glob
-from tqdm import tqdm
 import os.path as path
 from spirepy import Study
 from spirepy.sample import Sample
+from jug import TaskGenerator, bvalue, value
 
 study_name = "Lloyd-Price_2019_HMP2IBD"
 data_folder = "/work/microbiome/users/areiasca/micro_fr_pred/data/"
@@ -28,6 +28,7 @@ def get_abundances(sample: Sample):
     return abundances
 
 
+@TaskGenerator
 def generate_manifest(sample: Sample):
     manif = []
     mag_folder = path.join(data_folder, study_name, sample.id, "mags")
@@ -76,19 +77,18 @@ def generate_manifest(sample: Sample):
     return manifest
 
 
-def main():
-    study = Study(study_name)
-
-    manifest_list = []
-    for s in tqdm(study.samples):
-        manifest = generate_manifest(s)
-        print(manifest)
-        manifest_list.append(manifest)
-    study_manifest = pl.concat(manifest_list, how="vertical")
-    study_manifest = study_manifest.group_by("sample_id")
-    study_manifest.write_csv(path.join(data_folder, study_name, "study_manifest.csv"))
-    print(study_manifest)
+@TaskGenerator
+def load_study(study: str):
+    return Study(study)
 
 
-if __name__ == "__main__":
-    main()
+study = load_study(study_name)
+
+manifest_list = []
+for s in bvalue(study).samples:
+    manifest = generate_manifest(s)
+    manifest_list.append(manifest.value())
+study_manifest = pl.concat(manifest_list, how="vertical")
+study_manifest = study_manifest.group_by("sample_id")
+study_manifest.write_csv(path.join(data_folder, study_name, "study_manifest.csv"))
+print(study_manifest)
