@@ -18,10 +18,10 @@ def get_abundances(sample: Sample):
         f"/work/microbiome/global_data_spire/SPIRE/studies/{study_name}/psa_megahit/psb_metabat2/{sample.id}_aligned_to_{sample.id}.depths",
         separator="\t",
     )
-    for f in glob.glob(path.join(mag_folder, "*.fa.gz")):
+    for f in sorted(glob.glob(path.join(mag_folder, "*.fa.gz"))):
         with gzip.open(f, "rt") as handle:
-            list_headers = [rec.id for rec in SeqIO.parse(handle, "fasta")]
-        abundance = depths.filter(depths["contigName"].is_in(list_headers))[
+            headers = set(rec.id for rec in SeqIO.parse(handle, "fasta"))
+        abundance = depths.filter(depths["contigName"].is_in(headers))[
             "totalAvgDepth"
         ].sum()
         abundances[f] = abundance
