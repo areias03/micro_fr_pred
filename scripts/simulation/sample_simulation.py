@@ -1,14 +1,13 @@
-import polars as pl
-from Bio import SeqIO
-import gzip
-import glob
-import os.path as path
-from spirepy import Study
 from spirepy.sample import Sample
+import os.path as path
+import gzip
+import polars as pl
+import micom
+from Bio import SeqIO
+from glob import glob
 
 study_name = "Lloyd-Price_2019_HMP2IBD"
 data_folder = "/work/microbiome/users/areiasca/micro_fr_pred/data/"
-
 
 def get_abundances(sample: Sample):
     abundances = {}
@@ -17,7 +16,7 @@ def get_abundances(sample: Sample):
         f"/work/microbiome/global_data_spire/SPIRE/studies/{study_name}/psa_megahit/psb_metabat2/{sample.id}_aligned_to_{sample.id}.depths",
         separator="\t",
     )
-    for f in sorted(glob.glob(path.join(mag_folder, "*.fa.gz"))):
+    for f in sorted(glob(path.join(mag_folder, "*.fa.gz"))):
         with gzip.open(f, "rt") as handle:
             headers = set(rec.id for rec in SeqIO.parse(handle, "fasta"))
         abundance = depths.filter(depths["contigName"].is_in(headers))[
@@ -74,29 +73,4 @@ def generate_manifest(sample: Sample):
     )
     return manifest
 
-
-def load_study(study: str):
-    return Study(study)
-
-
-def merge_partials(partials):
-    study_manifest = pl.concat(partials, how="vertical")
-    study_manifest = study_manifest.group_by("sample_id")
-    oname = path.join(data_folder, study_name, "study_manifest_linear.csv")
-    study_manifest.write_csv(oname)
-    return oname
-
-
-def main():
-    study = load_study(study_name)
-
-    manifest_list = []
-    for s in study.samples:
-        manifest = generate_manifest(s)
-        manifest_list.append(manifest)
-
-    merge_partials(manifest_list)
-
-
-if __name__ == "__main__":
-    main()
+def 

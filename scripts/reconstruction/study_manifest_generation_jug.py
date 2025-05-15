@@ -5,6 +5,7 @@ import glob
 import os.path as path
 from spirepy import Study
 from spirepy.sample import Sample
+from jug import TaskGenerator, bvalue, value
 
 study_name = "Lloyd-Price_2019_HMP2IBD"
 data_folder = "/work/microbiome/users/areiasca/micro_fr_pred/data/"
@@ -27,6 +28,7 @@ def get_abundances(sample: Sample):
     return abundances
 
 
+@TaskGenerator
 def generate_manifest(sample: Sample):
     manif = []
     mag_folder = path.join(data_folder, study_name, sample.id, "mags")
@@ -75,28 +77,26 @@ def generate_manifest(sample: Sample):
     return manifest
 
 
+@TaskGenerator
 def load_study(study: str):
     return Study(study)
 
 
+@TaskGenerator
 def merge_partials(partials):
     study_manifest = pl.concat(partials, how="vertical")
     study_manifest = study_manifest.group_by("sample_id")
-    oname = path.join(data_folder, study_name, "study_manifest_linear.csv")
+    oname = path.join(data_folder, study_name, "study_manifest.csv")
     study_manifest.write_csv(oname)
     return oname
 
 
-def main():
-    study = load_study(study_name)
+study = load_study(study_name)
 
-    manifest_list = []
-    for s in study.samples:
-        manifest = generate_manifest(s)
-        manifest_list.append(manifest)
+manifest_list = []
+for s in bvalue(study).samples:
+    manifest = generate_manifest(s)
+    manifest_list.append(manifest)
 
-    merge_partials(manifest_list)
+merge_partials(manifest_list)
 
-
-if __name__ == "__main__":
-    main()
