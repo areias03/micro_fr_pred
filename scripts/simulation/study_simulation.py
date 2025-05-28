@@ -23,10 +23,14 @@ def main():
     out_folder = path.join(data_folder, study_name, "simulations")
     tax = pd.read_csv(path.join(data_folder, study_name, "study_manifest.csv"))
     manifest = build(
-        taxonomy=tax, out_folder=out_folder, model_db=None, cutoff=0.0001, threads=32
+        taxonomy=tax,
+        out_folder=out_folder,
+        model_db=None,
+        cutoff=0.0001,
+        threads=32,
     )
     # Western diet medium
-    medium = load_qiime_medium("../data/western_diet_gut.qza")
+    medium = load_qiime_medium(path.join(data_folder, "western_diet_gut.qza"))
     res = grow(
         manifest,
         model_folder=out_folder,
@@ -34,17 +38,17 @@ def main():
         tradeoff=1.0,
         threads=32,
     )
-    res.save(path.join(out_folder, "simulation_results.csv.zip"))
+    res.save(path.join(out_folder, "simulation_results.zip"))
     plot = plot_growth(res, filename=path.join(out_folder, "growth_rates.html"))
+    plot = plot_mes(res, filename=path.join(out_folder, "mes.html"))
+    plot = plot_exchanges_per_taxon(res, filename=path.join(out_folder, "niche.html"))
     full = interactions(res, taxa=None, threads=32)
     full.to_csv(path.join(out_folder, "interactions.csv"))
-    summary = summarize_interactions(full)
-    summary.to_csv(path.join(out_folder, "interactions_summary.csv"))
     plot = plot_focal_interactions(
         res, taxon=None, filename=path.join(out_folder, "niche.html")
     )
-    plot = plot_mes(res, filename=path.join(out_folder, "mes.html"))
-    plot = plot_exchanges_per_taxon(res, filename=path.join(out_folder, "niche.html"))
+    summary = summarize_interactions(full)
+    summary.to_csv(path.join(out_folder, "interactions_summary.csv"))
 
 
 if __name__ == "__main__":
