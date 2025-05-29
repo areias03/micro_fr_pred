@@ -6,7 +6,7 @@ from typing import Union, List
 
 def metabolic_independence(
     results: GrowthResults,
-    taxa: Union[None, str, List[str]],
+    taxa: Union[None, str, List[str]] = None,
 ) -> pl.DataFrame:
     """Calculate the Metabolic Independece (MI) score for a taxon.
 
@@ -38,7 +38,7 @@ def metabolic_independence(
 
 def consumer_producer(
     results: GrowthResults,
-    taxa: Union[None, str, List[str]],
+    taxa: Union[None, str, List[str]] = None,
 ) -> pl.DataFrame:
     """Calculate the consumer/producer score for a taxon.
 
@@ -78,6 +78,11 @@ def consumer_producer(
     mes = MES(results)
     mes = pl.from_pandas(mes)
 
+    if taxa is not None:
+        if taxa is str:
+            exchanges = exchanges.filter(exchanges["taxon"] == taxa)
+        else:
+            exchanges = exchanges.filter(exchanges["taxon"].is_in(taxa))
     exchanges = exchanges.with_columns(MES=pl.lit(0))
     exchanges = exchanges.filter(exchanges["taxon"] != "medium")
     i = 0
@@ -93,7 +98,7 @@ def consumer_producer(
 
 def community_importance(
     results: GrowthResults,
-    taxa: Union[None, str, List[str]],
+    taxa: Union[None, str, List[str]] = None,
 ) -> pl.DataFrame:
     """Calculate and classify the impact a single microbe has on the community.
 
@@ -127,7 +132,7 @@ def community_importance(
 
 def network_reach(
     results: GrowthResults,
-    taxa: Union[None, str, List[str]],
+    taxa: Union[None, str, List[str]] = None,
 ) -> pl.DataFrame:
     """Calculate the reach of a microbe's metabolic network.
 
@@ -154,7 +159,7 @@ def network_reach(
 
 def stress_resistance(
     results: GrowthResults,
-    taxa: Union[None, str, List[str]],
+    taxa: Union[None, str, List[str]] = None,
 ) -> pl.DataFrame:
     """Calculate the resistance to metabolic stress.
 
