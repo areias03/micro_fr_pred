@@ -1,4 +1,5 @@
-from typing import List, Union
+import random
+from typing import Dict, List, Union
 
 import numpy as np
 import polars as pl
@@ -7,11 +8,8 @@ from micom.workflows.results import GrowthResults
 
 
 def consumer_producer(
-    # results: GrowthResults,
-    results: str,
-    mes: str,
-    taxa: Union[None, str] = None,
-) -> pl.DataFrame:
+    results: GrowthResults, taxa: Union[None, str] = None
+) -> (Dict, Dict):
     """Calculate the consumer/producer score for a taxon.
 
     This parameter is defined as the sum of all import and export fluxes
@@ -34,7 +32,10 @@ def consumer_producer(
     Returns
     -------
     polars.DataFrame
-        The scores for each taxon and their respectve classification.
+        The scores for each taxon.
+
+    polars.DataFrame
+        The classification for each taxon.
 
     References
     ----------
@@ -44,11 +45,8 @@ def consumer_producer(
 
 
     """
-    # exchanges = pl.from_pandas(results.exchanges)
-    # mes = MES(results)
-    # mes = pl.from_pandas(mes)
-    exchanges = pl.read_csv(results)
-    mes = pl.read_csv(mes)
+    exchanges = pl.from_pandas(results.exchanges)
+    mes = pl.from_pandas(MES(results))
     exchanges = exchanges.filter(exchanges["taxon"] != "medium")
 
     if taxa is not None:
@@ -63,9 +61,6 @@ def consumer_producer(
     for t in sorted(taxon_list):
         temp = exchanges.filter(exchanges["taxon"] == t)
         size = len(temp)
-        # print(
-        #     f"Taxon: {t}\tSize: {size}\t Total: {len(exchanges)}\tRatio: {(size / len(exchanges))}"
-        # )
         i = 0
         for line in temp.iter_rows(named=True):
             temp[i, "MES"] = mes.filter(
@@ -88,11 +83,12 @@ def consumer_producer(
         else:
             classification[i] = "Mixed"
 
-    return classification
+    return scores, classification
 
 
 def metabolic_independence(
-    results: GrowthResults,
+    res: str,
+    # results: GrowthResults,
     taxa: Union[None, str, List[str]] = None,
 ) -> pl.DataFrame:
     """Calculate the Metabolic Independece (MI) score for a taxon.
@@ -120,6 +116,22 @@ def metabolic_independence(
            Metabolic independence drives gut microbial colonization and resilience in health and disease.
            Genome Biol 24, 78 (2023). https://doi.org/10.1186/s13059-023-02924-x
     """
+    growth_rates = pl.read_csv(res)
+    # growth_rates = pl.from_pandas(results.growth_rates)
+
+    taxon_list = growth_rates["taxon"].unique().to_list()
+
+    for t in sorted(taxon_list):
+        origin_sample = growth_rates.filter(growth_rates["taxon"] == t)[
+            "sample_id"
+        ].to_list()[0]
+        sample_list = growth_rates["sample_id"].unique().to_list()
+        sample_list.remove(origin_sample)
+        random_samples = random.sample(sorted(sample_list), 10)
+        print(
+            f"Taxon: {t}\tSample: {origin_sample}\n Randomised samples:{random_samples}\tMistake in sampling: {origin_sample in random_samples}"
+        )
+
     return None
 
 
