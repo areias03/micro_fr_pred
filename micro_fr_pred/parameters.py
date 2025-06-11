@@ -90,6 +90,10 @@ def consumer_producer(
     return scores, classification
 
 
+def _metabolic_independence_score(taxon):
+    pass
+
+
 def metabolic_independence(
     res: str,
     # results: GrowthResults,
