@@ -7,6 +7,10 @@ from micom.interaction import MES
 from micom.workflows.results import GrowthResults
 
 
+def _consumer_producer_score(taxon):
+    pass
+
+
 def consumer_producer(
     results: GrowthResults, taxa: Union[None, str] = None
 ) -> (Dict, Dict):
@@ -125,9 +129,16 @@ def metabolic_independence(
         origin_sample = growth_rates.filter(growth_rates["taxon"] == t)[
             "sample_id"
         ].to_list()[0]
-        sample_list = growth_rates["sample_id"].unique().to_list()
-        sample_list.remove(origin_sample)
-        random_samples = random.sample(sorted(sample_list), 10)
+        random_samples = random.sample(
+            sorted(
+                [
+                    s
+                    for s in growth_rates.filter(growth_rates["taxon"] == t)
+                    if s != origin_sample
+                ]
+            ),
+            10,
+        )
         print(
             f"Taxon: {t}\tSample: {origin_sample}\n Randomised samples:{random_samples}\tMistake in sampling: {origin_sample in random_samples}"
         )
