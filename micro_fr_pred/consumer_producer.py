@@ -5,15 +5,20 @@ from micom.interaction import MES
 from micom.workflows.results import GrowthResults
 
 
-def _consumer_producer_score(reaction_scores, n_exchanges, total_exchanges, mode):
+def _consumer_producer_score(
+    reaction_scores, n_exchanges, total_exchanges, abundance, mode
+):
     if mode == "balanced":
-        return sum(reaction_scores) * (n_exchanges / total_exchanges)
+        return (sum(reaction_scores) * (n_exchanges / total_exchanges)) / abundance
     elif mode == "unbalanced":
-        return sum(reaction_scores)
+        return sum(reaction_scores) / abundance
 
 
 def consumer_producer(
-    results: GrowthResults,
+    results: pl.DataFrame,
+    mes: pl.DataFrame,
+    manifest: pl.DataFrame,
+    # results: GrowthResults,
     taxa: Union[None, str] = None,
     mode: str = "balanced",
 ) -> (Dict, Dict):
@@ -55,8 +60,9 @@ def consumer_producer(
 
 
     """
-    exchanges = pl.from_pandas(results.exchanges)
-    mes = pl.from_pandas(MES(results))
+    exchanges = results
+    # exchanges = pl.from_pandas(results.exchanges)
+    # mes = pl.from_pandas(MES(results))
     exchanges = exchanges.filter(exchanges["taxon"] != "medium")
 
     if taxa is not None:
@@ -78,8 +84,9 @@ def consumer_producer(
             )["MES"][0]
             i += 1
         temp = temp.with_columns(reaction_score=(pl.col("flux") * pl.col("MES")))
+        abun = manifest.filter(manifest["id"] == t)["abundance"][0]
         scores[t] = _consumer_producer_score(
-            temp["reaction_score"].to_list(), len(temp), len(exchanges), mode="balanced"
+            temp["reaction_score"].to_list(), len(temp), len(exchanges), abun, mode
         )
 
     for i in scores.keys():
