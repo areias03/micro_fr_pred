@@ -36,7 +36,7 @@ def _simulate_randomized_samples(manif):
             threads=2,
         )
         res = grow(
-            manifest, model_folder=tmpdir, medium=medium, tradeoff=0.5, threads=2
+            manifest, model_folder=tmpdir, medium=medium, tradeoff=1.0, threads=2
         )
         return res.growth_rates
 
@@ -48,9 +48,8 @@ def _metabolic_independence_score(original_growth_rate, randomized_growth_rates)
 
 
 def metabolic_independence(
-    growth_rates: pl.DataFrame,
     manifest: pl.DataFrame,
-    # results: GrowthResults,
+    results: GrowthResults,
     taxa: Union[None, str, List[str]] = None,
 ) -> (Dict, Dict):
     """Calculate the Metabolic Independece (MI) score for a taxon.
@@ -72,7 +71,7 @@ def metabolic_independence(
     polars.DataFrame
         The scores for each taxon and their respectve classification.
     """
-    # growth_rates = pl.from_pandas(results.growth_rates)
+    growth_rates = results.growth_rates
 
     taxon_list = growth_rates["taxon"].unique().to_list()
     if taxa is not None:
