@@ -51,25 +51,25 @@ def metabolic_independence(
     manifest: pl.DataFrame,
     results: GrowthResults,
     taxa: Union[None, str, List[str]] = None,
-) -> (Dict, Dict):
+) -> Dict:
     """Calculate the Metabolic Independece (MI) score for a taxon.
 
-    This parameter is...
+    This parameter can be defined as the evaluation of the contextual capability
+    that a  certain microbe has of performing favorably to its own growth despite
+    community contexts.
 
-    Arguments
-    ---------
+    :param results: The growth results to use.
+    :type results: :class:`micom.workflows.results.GrowthResults`
 
-    results : micom.workflows.results.GrowthResults
-        The growth results to use.
+    :param manifest: The manifest for the target microbes.
+    :type results: :class:`polars.dataframe.DataFrame`
 
-    taxa : str, list of str, or None
-        The focal taxa to use. Can be a single taxon, a list of taxa or None in which
-        case all taxa are considered.
+    :param taxa: The focal taxa to use. Can be a single taxon, a list of taxa or None in which case all taxa are considered.
+    :type taxa: Union[str, list(str), None]
 
-    Returns
-    -------
-    polars.DataFrame
-        The scores for each taxon and their respectve classification.
+
+    :return: The scores for each taxon and their respectve classification.
+    :rtype: dict
     """
     growth_rates = results.growth_rates
 
