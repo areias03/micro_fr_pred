@@ -1,0 +1,56 @@
+configfile: "config.yaml"
+
+
+rule all:
+    input:
+        f"results/{config["item"]}/simulation.done"
+
+rule processing:
+    input:
+        item = config["item"]
+    output:
+        manifest = f"results/{item}/manifest.csv" 
+    shell:
+        """
+        mkdir -p results/{config["item"]}/
+
+        python scripts/item_processing.py {config["item"]} -t {config["processing_level"]} -w {threads} -o {output} 
+        """        
+    elif config["processing_level"] == "sample":
+        shell:
+            """
+            mkdir -p results/{config["item"]}/
+
+            python scripts/process_sample.py {config["item"]} 
+            """
+
+rule reconstruction:
+    input:
+        script="../scripts/reconstruction/item_reconstruction.py"
+    output:
+        touch(f"results/{config["item"]}/reconstruction.done")
+    shell:
+        "python {input.script} --item {config["item"]}"
+
+rule manifest_generation:
+    input:
+        script="../scripts/reconstruction/item_manifest_generation.py",
+        reconstruction_done=f"results/{config["item"]}/reconstruction.done"
+    output:
+        touch(f"results/{config["item"]}/manifest.csv")
+    shell:
+        "python {input.script} --item {config["item"]}"
+
+rule simulation:
+    input:
+        script="../scripts/simulation/item_simulation.py",
+        manifest_done=f"results/{config["item"]}/manifest.done"
+    output:
+        touch(f"results/{config["item"]}/simulation.done")
+    shell:
+        "python {input.script} --item {config["item"]}"
+rule functional_role_prediction:
+    input:
+        growth_results=""
+        manifest=""
+    output:
