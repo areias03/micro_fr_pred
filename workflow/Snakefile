@@ -1,56 +1,86 @@
-configfile: "config.yaml"
+configfile: "config/config.yaml"
 
 
 rule all:
     input:
-        f"results/{config["item"]}/simulation.done"
+        f"results/{config['item']}/manifest.csv"
 
-rule processing:
-    input:
-        item = config["item"]
+rule pre_processing:
     output:
-        manifest = f"results/{item}/manifest.csv" 
+        mag_list=f"results/{config['item']}/mags.txt",
+        eggnog_data=f"results/{config['item']}/eggnog_data.csv"
+    params:
+        item=config["item"],
+        processing_level=config["processing_level"]
+    run:
+        import os
+        import os.path as path
+        os.makedirs(path.join("results",params.item), exist_ok = True)
+        if params.processing_level == "sample":
+            from spirepy import Sample
+            Sample(params.item).get_eggnog_data().write_csv(output.eggnog_data)
+            with open(str(output.mag_list), "w") as f:
+                f.write("\n".join(Sample(params.item).get_mags()["genome_id"].to_list()))
+        if params.processing_level == "study":
+            from spirepy import Study
+            egg_data = []
+            for s in Study(params.item):
+                egg_data.append(s.get_eggnog_data())
+            pl.concat(egg_data).write_csv(output.eggnog_data)
+            with open(str(output.mag_list), "w") as f:
+                f.write("\n".join(Study(params.item).get_mags()["genome_id"].to_list()))
+
+rule download_mags:
+    input:
+        f"results/{config['item']}/mags.txt"
+    output:
+        mags=directory(f"results/{config['item']}/mags/")
+    params:
+        item = config["item"],
+        processing_level = config["processing_level"]
     shell:
         """
-        mkdir -p results/{config["item"]}/
+        python scripts/mag_download.py {input} -o {output}
+        """
 
-        python scripts/item_processing.py {config["item"]} -t {config["processing_level"]} -w {threads} -o {output} 
+rule reconstruct:
+    input:
+        mag_folder = f"results/{config['item']}/mags/",
+        eggnog_data=f"results/{config['item']}/eggnog_data.csv"
+    output:
+        reconstructions_folder = ensure(directory(f"results/{config['item']}/reconstructions/"), non_empty=True)
+    params:
+        item = config["item"],
+        processing_level = config["processing_level"]
+    shell:
+        """
+        python scripts/reconstruct.py {input.mag_folder} -e {input.eggnog_data} -o {output.reconstructions_folder}
+         """
+
+rule generate_manifest:
+    input:
+        mag_folder = f"results/{config['item']}/mags",
+        reconstructions_folder = f"results/{config['item']}/reconstructions"
+    output:
+        f"results/{config['item']}/manifest.csv"
+    params:
+        item=config["item"],
+        processing_level=config["processing_level"]
+    shell:
+        """
+        python scripts/manifest_generation.py {params.item} -t {params.processing_level} -o {output} -m {input.mag_folder} -r {input.reconstructions_folder}
         """        
-    elif config["processing_level"] == "sample":
-        shell:
-            """
-            mkdir -p results/{config["item"]}/
 
-            python scripts/process_sample.py {config["item"]} 
-            """
-
-rule reconstruction:
-    input:
-        script="../scripts/reconstruction/item_reconstruction.py"
-    output:
-        touch(f"results/{config["item"]}/reconstruction.done")
-    shell:
-        "python {input.script} --item {config["item"]}"
-
-rule manifest_generation:
-    input:
-        script="../scripts/reconstruction/item_manifest_generation.py",
-        reconstruction_done=f"results/{config["item"]}/reconstruction.done"
-    output:
-        touch(f"results/{config["item"]}/manifest.csv")
-    shell:
-        "python {input.script} --item {config["item"]}"
-
-rule simulation:
-    input:
-        script="../scripts/simulation/item_simulation.py",
-        manifest_done=f"results/{config["item"]}/manifest.done"
-    output:
-        touch(f"results/{config["item"]}/simulation.done")
-    shell:
-        "python {input.script} --item {config["item"]}"
-rule functional_role_prediction:
-    input:
-        growth_results=""
-        manifest=""
-    output:
+# rule simulation:
+#     input:
+#         script="../scripts/simulation/item_simulation.py",
+#         manifest_done=f"results/{config['item']}/manifest.done"
+#     output:
+#         touch(f"results/{config['item']}/simulation.done")
+#     shell:
+#         "python {input.script} --item {config['item']}"
+# rule functional_role_prediction:
+#     input:
+#         growth_results=""
+#         manifest=""
+#     output:

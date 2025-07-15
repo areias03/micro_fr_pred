@@ -1,2 +1,2 @@
-item: "MY_ITEM_ID"
-processing_level: "study" # or "sample"
+item: "SAMN02044683" # id for the SPIRE item
+processing_level: "sample" # "study" or "sample"

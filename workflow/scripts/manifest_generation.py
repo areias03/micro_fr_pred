@@ -3,18 +3,24 @@ import argparse
 import os.path as path
 import polars as pl
 import gzip
-import glob.glob
+import glob
 from Bio import SeqIO
 
 
 from spirepy import Study, Sample
 
 
-def get_abundances(sample: Sample, folder: str):
+def get_abundances(sample: Sample, mag_folder):
     abundances = {}
-    mag_folder = path.join(folder, "mags")
     depths = sample.get_contig_depths()
-    for f in sorted(glob.glob(path.join(mag_folder, "*.fa.gz"))):
+    for f in sorted(
+        [
+            mag
+            for mag in glob.glob(path.join(mag_folder, "*.fa.gz"))
+            if mag.split("/")[-1].strip(".fa.gz")
+            in sample.get_mags()["genome_id"].to_list()
+        ]
+    ):
         with gzip.open(f, "rt") as handle:
             headers = set(rec.id for rec in SeqIO.parse(handle, "fasta"))
         abundance = depths.filter(pl.col("contigName").is_in(headers))[
@@ -24,15 +30,13 @@ def get_abundances(sample: Sample, folder: str):
     return abundances
 
 
-def generate_manifest(sample: Sample, folder: str):
+def generate_manifest(sample: Sample, mag_folder: str, reconstruction_folder: str):
     manif = []
-    mag_folder = path.join(folder, "mags")
-    reconstruction_folder = path.join(folder, "reconstructions")
-    abun = get_abundances(sample)
+    abun = get_abundances(sample, mag_folder)
     for genome in sample.get_mags().iter_rows(named=True):
         manif.append(
             [
-                genome["spire_id"],
+                genome["genome_id"],
                 genome["domain"],
                 genome["phylum"],
                 genome["class"],
@@ -40,9 +44,9 @@ def generate_manifest(sample: Sample, folder: str):
                 genome["family"],
                 genome["genus"],
                 genome["species"],
-                path.join(reconstruction_folder, f"{genome['spire_id']}.xml"),
-                genome["sample_id"],
-                abun[path.join(mag_folder, f"{genome['spire_id']}.fa.gz")],
+                path.join(reconstruction_folder, f"{genome['genome_id']}.xml"),
+                genome["derived_from_sample"],
+                abun[path.join(mag_folder, f"{genome['genome_id']}.fa.gz")],
             ]
         )
 
@@ -70,35 +74,36 @@ def generate_manifest(sample: Sample, folder: str):
     return manifest
 
 
-def main(item, type, workers, out_folder):
+def main(item, type, out_file, mag_folder, reconstruction_folder):
     if type == "study":
         target = Study(item)
         results = []
-        with ThreadPoolExecutor(max_workers=workers) as executor:
+        with ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(generate_manifest, s, out_folder)
-                for s in target.get_samples()
+                executor.submit(generate_manifest, s, mag_folder, reconstruction_folder) for s in target.get_samples()
             ]
             for future in as_completed(futures):
                 results.append(future.result())
         study_manifest = pl.concat(results)
-        study_manifest.write_csv(path.join(out_folder, "manifest.csv"))
+        study_manifest.write_csv(out_file)
 
     elif type == "sample":
         target = Sample(item)
-        sample_manifest = generate_manifest(target, out_folder)
-        sample_manifest.write_csv(path.join(out_folder, "manifest.csv"))
+        sample_manifest = generate_manifest(target, mag_folder, reconstruction_folder)
+        sample_manifest.write_csv(out_file)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "input",
-        metavar="INPUT",
-        help="Input file (list of mags to download)",
+        "item",
+        metavar="ITEM",
+        help="Input item (study or sample ID)",
         type=str,
     )
     parser.add_argument("-t", "--type", choices=["sample", "study"], default="study")
-    parser.add_argument("-w", "--workers", dest="n_workers", type=int, default=1)
     parser.add_argument("-o", "--output", dest="output", help="output folder")
+    parser.add_argument("-m", "--mags", dest="mags", help="mags folder")
+    parser.add_argument("-r", "--reconstruction", dest="reconstructions", help="reconstructions folder")
     args = parser.parse_args()
+    main(args.item, args.type, args.output, args.mags, args.reconstructions)
