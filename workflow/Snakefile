@@ -43,15 +43,24 @@ rule download_mags:
         python scripts/mag_download.py {input} -o {output}
         """
 
+rule split_eggnog_data:
+    input:
+        mags = f"results/{config['item']}/mags/",
+        eggnog_data=f"results/{config['item']}/eggnog_data.csv"
+    output:
+        directory(f"results/{config['item']}/eggnog/")
+    shell:
+        """
+        python scripts/split_eggnog_data.py {input.mags} -e {input.eggnog_data} -o {output}
+        """
+
 rule reconstruct:
     input:
         mag_folder = f"results/{config['item']}/mags/",
-        eggnog_data=f"results/{config['item']}/eggnog_data.csv"
+        eggnog_data=f"results/{config['item']}/eggnog/"
     output:
-        reconstructions_folder = ensure(directory(f"results/{config['item']}/reconstructions/"), non_empty=True)
-    params:
-        item = config["item"],
-        processing_level = config["processing_level"]
+        reconstructions_folder = directory(f"results/{config['item']}/reconstructions/"),
+        reconstructions_done = touch(f"results/{config['item']}/reconstructions/reconstructions.done")
     shell:
         """
         python scripts/reconstruct.py {input.mag_folder} -e {input.eggnog_data} -o {output.reconstructions_folder}
@@ -60,7 +69,7 @@ rule reconstruct:
 rule generate_manifest:
     input:
         mag_folder = f"results/{config['item']}/mags",
-        reconstructions_folder = f"results/{config['item']}/reconstructions"
+        reconstructions_folder = f"results/{config['item']}/reconstructions/"
     output:
         f"results/{config['item']}/manifest.csv"
     params:
