@@ -24,7 +24,7 @@ rule pre_processing:
         if params.processing_level == "study":
             from spirepy import Study
             egg_data = []
-            for s in Study(params.item):
+            for s in Study(params.item).get_samples():
                 egg_data.append(s.get_eggnog_data())
             pl.concat(egg_data).write_csv(output.eggnog_data)
             with open(str(output.mag_list), "w") as f:
@@ -56,14 +56,13 @@ rule split_eggnog_data:
 
 rule reconstruct:
     input:
-        mag_folder = f"results/{config['item']}/mags/",
         eggnog_data=f"results/{config['item']}/eggnog/"
     output:
         reconstructions_folder = directory(f"results/{config['item']}/reconstructions/"),
         reconstructions_done = touch(f"results/{config['item']}/reconstructions/reconstructions.done")
     shell:
         """
-        python scripts/reconstruct.py {input.mag_folder} -e {input.eggnog_data} -o {output.reconstructions_folder}
+        python scripts/reconstruct.py {input.eggnog_data} -o {output.reconstructions_folder}
          """
 
 rule generate_manifest:

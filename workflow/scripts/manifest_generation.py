@@ -5,6 +5,7 @@ import polars as pl
 import gzip
 import glob
 from Bio import SeqIO
+from util import get_ncpus
 
 
 from spirepy import Study, Sample
@@ -78,9 +79,10 @@ def main(item, type, out_file, mag_folder, reconstruction_folder):
     if type == "study":
         target = Study(item)
         results = []
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=get_ncpus()) as executor:
             futures = [
-                executor.submit(generate_manifest, s, mag_folder, reconstruction_folder) for s in target.get_samples()
+                executor.submit(generate_manifest, s, mag_folder, reconstruction_folder)
+                for s in target.get_samples()
             ]
             for future in as_completed(futures):
                 results.append(future.result())
@@ -104,6 +106,8 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--type", choices=["sample", "study"], default="study")
     parser.add_argument("-o", "--output", dest="output", help="output folder")
     parser.add_argument("-m", "--mags", dest="mags", help="mags folder")
-    parser.add_argument("-r", "--reconstruction", dest="reconstructions", help="reconstructions folder")
+    parser.add_argument(
+        "-r", "--reconstruction", dest="reconstructions", help="reconstructions folder"
+    )
     args = parser.parse_args()
     main(args.item, args.type, args.output, args.mags, args.reconstructions)

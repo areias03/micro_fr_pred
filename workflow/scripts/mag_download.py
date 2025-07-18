@@ -3,6 +3,7 @@ import os
 import os.path as path
 import argparse
 import urllib.request
+from util import get_ncpus
 
 
 def download_mag(mag, folder):
@@ -26,5 +27,5 @@ if __name__ == "__main__":
     os.makedirs(args.output, exist_ok=True)
     with args.input as f:
         mags = f.read().splitlines()
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=get_ncpus()) as executor:
             [executor.submit(download_mag, mag, args.output) for mag in mags]
