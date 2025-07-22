@@ -18,7 +18,7 @@ def get_abundances(sample: Sample, mag_folder):
         [
             mag
             for mag in glob.glob(path.join(mag_folder, "*.fa.gz"))
-            if mag.split("/")[-1].strip(".fa.gz")
+            if mag.split("/")[-1].split("-")[1].strip(".fa.gz")
             in sample.get_mags()["genome_id"].to_list()
         ]
     ):
@@ -47,7 +47,12 @@ def generate_manifest(sample: Sample, mag_folder: str, reconstruction_folder: st
                 genome["species"],
                 path.join(reconstruction_folder, f"{genome['genome_id']}.xml"),
                 genome["derived_from_sample"],
-                abun[path.join(mag_folder, f"{genome['genome_id']}.fa.gz")],
+                abun[
+                    path.join(
+                        mag_folder,
+                        f"{genome['derived_from_sample']}-{genome['genome_id']}.fa.gz",
+                    )
+                ],
             ]
         )
 

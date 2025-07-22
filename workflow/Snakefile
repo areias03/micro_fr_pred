@@ -16,24 +16,26 @@ rule pre_processing:
         1
     run:
         import os
-        import os.path as path
-        os.makedirs(path.join("results",params.item), exist_ok = True)
+        os.makedirs(os.path.join("results",params.item), exist_ok = True)
         if params.processing_level == "sample":
             from spirepy import Sample
-            Sample(params.item).get_eggnog_data().write_csv(output.eggnog_data)
+            import itertools
+            import polars as pl
+            sample = Sample(params.item)
+            sample.get_eggnog_data().with_columns(pl.lit(sample.id).alias("sample")).write_csv(output.eggnog_data)
+            mags = sample.get_mags()["genome_id"].to_list()
             with open(str(output.mag_list), "w") as f:
-                for mag in Sample(params.item).get_mags()['genome_id'].to_list():
-                    f.write(",".join(Sample(params.item).id, mag))
+                f.write('\n'.join(','.join(map(str, row)) for row in list(map(list, zip(mags, itertools.cycle([sample.id]))))))
         if params.processing_level == "study":
             from spirepy import Study
             import polars as pl
             egg_data = []
-            for s in Study(params.item).get_samples():
+            study = Study(params.item)
+            for s in study.get_samples():
                 egg_data.append(s.get_eggnog_data().with_columns(pl.lit(s.id).alias("sample")))
             pl.concat(egg_data).write_csv(output.eggnog_data)
             with open(str(output.mag_list), "w") as f:
-                 for mag in Study(params.item).get_mags().iter_rows(named=True):
-                    f.write(",".join(row["derived_from_sample"], row["genome_id"]))
+                f.write("\n".join(",".join(map(str, row)) for row in study.get_mags().with_columns(mapping = pl.concat_list("genome_id","derived_from_sample"))["mapping"].to_list()))
 
 rule download_mags:
     input:
@@ -44,7 +46,7 @@ rule download_mags:
         item = config["item"],
         processing_level = config["processing_level"]
     threads:
-        16
+        24
     shell:
         """
         python scripts/mag_download.py {input} -o {output}
@@ -57,7 +59,7 @@ rule split_eggnog_data:
     output:
         directory(f"results/{config['item']}/eggnog/")
     threads:
-        16
+        24
     shell:
         """
         python scripts/split_eggnog_data.py {input.mags} -e {input.eggnog_data} -o {output}
@@ -70,7 +72,7 @@ rule reconstruct:
         reconstructions_folder = directory(f"results/{config['item']}/reconstructions/"),
         reconstructions_done = touch(f"results/{config['item']}/reconstructions/reconstructions.done")
     threads:
-        16
+        24
     shell:
         """
         python scripts/reconstruct.py {input.eggnog_data} -o {output.reconstructions_folder}
@@ -86,7 +88,7 @@ rule generate_manifest:
         item=config["item"],
         processing_level=config["processing_level"]
     threads:
-        16
+        24
     shell:
         """
         python scripts/manifest_generation.py {params.item} -t {params.processing_level} -o {output} -m {input.mag_folder} -r {input.reconstructions_folder}

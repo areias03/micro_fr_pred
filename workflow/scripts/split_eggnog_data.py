@@ -13,9 +13,14 @@ def split_eggnog_data(mag, eggnog_data, output_folder):
     with gzip.open(mag, "rt") as handle:
         headers = [rec.id for rec in SeqIO.parse(handle, "fasta")]
     print(mag, headers)
-    print(eggnog_data.filter(pl.col("#query").str.contains_any(headers)))
-    eggnog_data.filter(pl.col("#query").str.contains_any(headers)).write_csv(
-        path.join(output_folder, f"{mag.split('/')[-1].strip('.fa.gz')}.tsv"),
+    split = eggnog_data.filter(
+        (pl.col("#query").str.contains_any(headers))
+        & (pl.col("sample") == mag.split("/")[-1].split("-")[0])
+    )
+    split.write_csv(
+        path.join(
+            output_folder, f"{mag.split('/')[-1].split('-')[1].strip('.fa.gz')}.tsv"
+        ),
         separator="\t",
     )
 
@@ -34,6 +39,5 @@ if __name__ == "__main__":
     os.makedirs(args.output, exist_ok=True)
     mags = sorted(glob.glob(path.join(args.input, "*.fa.gz")))
     egg = pl.read_csv(args.eggnog)
-    print(egg.group_by("#query").len().describe())
     with ThreadPoolExecutor(max_workers=get_ncpus()) as executor:
         [executor.submit(split_eggnog_data, mag, egg, args.output) for mag in mags]
