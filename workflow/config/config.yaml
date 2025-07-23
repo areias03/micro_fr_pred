@@ -1,5 +1,5 @@
-item: "Minot_2013_gut_phage" # id for the SPIRE item
-processing_level: "study" # "study" or "sample"
+# item: "Minot_2013_gut_phage" # id for the SPIRE item
+# processing_level: "study" # "study" or "sample"
 
-# item: "SAMN07510030" # id for the SPIRE item
-# processing_level: "sample" # "study" or "sample"
+item: "SAMN07510030" # id for the SPIRE item
+processing_level: "sample" # "study" or "sample"
