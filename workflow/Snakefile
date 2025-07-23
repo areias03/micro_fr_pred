@@ -94,16 +94,14 @@ rule generate_manifest:
         python scripts/manifest_generation.py {params.item} -t {params.processing_level} -o {output} -m {input.mag_folder} -r {input.reconstructions_folder}
         """        
 
-# rule simulation:
-#     input:
-#         script="../scripts/simulation/item_simulation.py",
-#         manifest_done=f"results/{config['item']}/manifest.done"
-#     output:
-#         touch(f"results/{config['item']}/simulation.done")
-#     shell:
-#         "python {input.script} --item {config['item']}"
-# rule functional_role_prediction:
-#     input:
-#         growth_results=""
-#         manifest=""
-#     output:
+rule get_optimal_tradeoffs:
+    input:
+        f"results/{config['item']}/manifest.csv"
+    output:
+        f"results/{config['item']}/tradeoffs.csv"
+    threads:
+        32
+    shell:
+        """
+        python scripts/get_tradeoffs.py {input} -o {output}
+        """
