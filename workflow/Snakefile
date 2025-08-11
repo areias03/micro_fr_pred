@@ -1,7 +1,7 @@
 configfile: "config/config.yaml"
 
 
-rule all:
+rule processing:
     input:
         f"results/{config['item']}/manifest.csv"
 
@@ -70,7 +70,7 @@ rule reconstruct:
         eggnog_data=f"results/{config['item']}/eggnog/"
     output:
         reconstructions_folder = directory(f"results/{config['item']}/reconstructions/"),
-        reconstructions_done = touch(f"results/{config['item']}/reconstructions/reconstructions.done")
+        touch(f"results/{config['item']}/reconstructions/reconstructions.done")
     threads:
         24
     shell:
@@ -96,12 +96,36 @@ rule generate_manifest:
 
 rule get_optimal_tradeoffs:
     input:
-        f"results/{config['item']}/manifest.csv"
+        manifest=f"results/{config['item']}/manifest.csv",
+        growth_medium=f"data/western_diet_gut.qza",
     output:
-        f"results/{config['item']}/tradeoffs.csv"
+        tradeoffs_folder=directory(f"results/{config['item']}/tradeoffs/"),
+        model_folder=directory(f"results/{config['item']}/models"),
+        f"results/{config['item']}/tradeoffs/tradeoffs.csv",
+        f"results/{config['item']}/tradeoffs/tradeoffs_count.csv",
+        f"results/{config['item']}/tradeoffs/tradeoffs.html"
+    threads:
+        24
+    shell:
+        """
+        python scripts/get_tradeoffs.py {input.manifest} -g {input.growth_medium} -m {output.model_folder} -o {output.tradeoffs_folder}
+        """
+
+rule simulate:
+    input:
+        manifest=f"results/{config['item']}/manifest.csv",
+        growth_medium=f"data/western_diet_gut.qza",
+        tradeoff=config['tradeoff']
+    output:
+        growth_results=directory(f"results/{config['item']}/results"),
+        f"results/{config['item']}/results/growth_rates.csv",
+        f"results/{config['item']}/results/exchanges.csv",
+        f"results/{config['item']}/results/annotations.csv",
+        f"results/{config['item']}/results/mes.csv"
+        f"results/{config['item']}/results/interactions.csv"
     threads:
         32
     shell:
         """
-        python scripts/get_tradeoffs.py {input} -o {output}
+        python scripts/simulation.py {input.manifest} -g {input.growth_medium} -t {input.tradeoff} -o {output.growth_results}
         """

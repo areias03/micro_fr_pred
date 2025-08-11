@@ -11,9 +11,8 @@ def reconstruct_mag(eggnog_data, reconstruction_folder: str):
     output = path.join(
         reconstruction_folder, f"{eggnog_data.split('/')[-1].removesuffix('.tsv')}.xml"
     )
-    # command = f"carve --dna {mag} --output {output} -g M9 -v"
-    command = f"carve --egg {eggnog_data} --output {output} -v"
-    subprocess.check_call(command, shell=True)
+    command = f"carve --egg {eggnog_data} -g M9 --output {output} -v"
+    subprocess.run(command, shell=True)
 
 
 if __name__ == "__main__":
