@@ -70,7 +70,7 @@ rule reconstruct:
         eggnog_data=f"results/{config['item']}/eggnog/"
     output:
         reconstructions_folder = directory(f"results/{config['item']}/reconstructions/"),
-        touch(f"results/{config['item']}/reconstructions/reconstructions.done")
+        reconstructions_done=touch(f"results/{config['item']}/reconstructions/reconstructions.done")
     threads:
         24
     shell:
@@ -101,9 +101,9 @@ rule get_optimal_tradeoffs:
     output:
         tradeoffs_folder=directory(f"results/{config['item']}/tradeoffs/"),
         model_folder=directory(f"results/{config['item']}/models"),
-        f"results/{config['item']}/tradeoffs/tradeoffs.csv",
-        f"results/{config['item']}/tradeoffs/tradeoffs_count.csv",
-        f"results/{config['item']}/tradeoffs/tradeoffs.html"
+        tradeoffs=f"results/{config['item']}/tradeoffs/tradeoffs.csv",
+        tradeoff_counts=f"results/{config['item']}/tradeoffs/tradeoffs_count.csv",
+        tradeoff_graph=f"results/{config['item']}/tradeoffs/tradeoffs.html"
     threads:
         24
     shell:
@@ -115,17 +115,19 @@ rule simulate:
     input:
         manifest=f"results/{config['item']}/manifest.csv",
         growth_medium=f"data/western_diet_gut.qza",
-        tradeoff=config['tradeoff']
     output:
-        growth_results=directory(f"results/{config['item']}/results"),
-        f"results/{config['item']}/results/growth_rates.csv",
-        f"results/{config['item']}/results/exchanges.csv",
-        f"results/{config['item']}/results/annotations.csv",
-        f"results/{config['item']}/results/mes.csv"
-        f"results/{config['item']}/results/interactions.csv"
+        results=directory(f"results/{config['item']}/results"),
+        model_folder=directory(f"results/{config['item']}/models"),
+        growth_rates=f"results/{config['item']}/results/growth_rates.csv",
+        exchanges=f"results/{config['item']}/results/exchanges.csv",
+        annotations=f"results/{config['item']}/results/annotations.csv",
+        mes=f"results/{config['item']}/results/mes.csv",
+        interactions=f"results/{config['item']}/results/interactions.csv"
+    params:
+        tradeoff=config["tradeoff"]
     threads:
-        32
+        24
     shell:
         """
-        python scripts/simulation.py {input.manifest} -g {input.growth_medium} -t {input.tradeoff} -o {output.growth_results}
+        python scripts/simulation.py {input.manifest} -m {output.model_folder} -g {input.growth_medium} -t {params.tradeoff} -o {output.results}
         """

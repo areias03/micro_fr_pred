@@ -1,6 +1,7 @@
-item: "Minot_2013_gut_phage" # id for the SPIRE item
-processing_level: "study" # "study" or "sample"
+item: "SAMN07510031" # id for the SPIRE item
+processing_level: "sample" # "study" or "sample"
+# item: "Minot_2013_gut_phage" # id for the SPIRE item
+# processing_level: "study" # "study" or "sample"
 tradeoff: 0.8
+growth_media: "data/western_diet_gut.qza"
 
-# item: "SAMN07510030" # id for the SPIRE item
-# processing_level: "sample" # "study" or "sample"

@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-g", "--growth_medium", dest="medium", help="growth medium file"
     )
-    parser.add_argument("-o", "--output", dest="output", help="output file prefix")
+    parser.add_argument("-o", "--output", dest="output", help="output folder")
     args = parser.parse_args()
     os.makedirs(args.output, exist_ok=True)
     data = pd.read_csv(args.input)
